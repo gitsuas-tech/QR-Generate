@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #text {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        #text:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button[onclick="generateQR()"] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        button[onclick="generateQR()"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button[onclick="downloadQR()"] {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        button[onclick="downloadQR()"]:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .qr-container {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 30px;
+            min-height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .qr-container::before {
+            position: absolute;
+            color: #ffffff;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        #qrImage {
+            max-width: 200px;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #qrImage[src]:not([src=""]) {
+            opacity: 1;
+        }
+
+        #qrImage[src]:not([src=""]) ~ .qr-container::before {
+            display: none;
+        }
+
+        .scan-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .scan-title {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        #reader {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .footer {
+            margin-top: 20px;
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔳 QR Generator</h1>
+        <p class="subtitle">Buat dan download QR Code dengan mudah</p>
+
+        <!-- GENERATE -->
+        <div class="input-group">
+            <input type="text" id="text" placeholder="Masukkan text / link / URL...">
+        </div>
+
+        <div class="button-group">
+            <button onclick="generateQR()">Generate</button>
+            <button onclick="downloadQR()">Download</button>
+        </div>
+
+        <div class="qr-container">
+            <img id="qrImage" width="200" />
+        </div>
+
+        <div class="loading" id="loading"></div>
+
+
+        <p class="footer">© 2026 QR Generator Tool</p>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <script>
+        let qrData = "";
+
+        async function generateQR() {
+            const text = document.getElementById("text").value;
+            const loading = document.getElementById("loading");
+            const qrImage = document.getElementById("qrImage");
+
+            if (!text) {
+                alert("Silakan masukkan text terlebih dahulu!");
+                return;
+            }
+
+            loading.style.display = "block";
+            qrImage.style.opacity = "0";
+
+            try {
+                const res = await fetch("/generate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const data = await res.json();
+                qrData = data.qr;
+
+                qrImage.onload = function() {
+                    loading.style.display = "none";
+                    qrImage.style.opacity = "1";
+                };
+
+                qrImage.src = qrData;
+            } catch (error) {
+                loading.style.display = "none";
+                alert("Terjadi kesalahan saat generate QR Code");
+            }
+        }
+
+        function downloadQR() {
+            if (!qrData) return alert("Generate dulu!");
+
+            const a = document.createElement("a");
+            a.href = qrData;
+            a.download = "qr-code.png";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Initialize QR Scanner
+        function onScanSuccess(decodedText, decodedResult) {
+            alert(`Hasil scan: ${decodedText}`);
+        }
+
+        function onScanFailure(error) {
+            // console.warn(`Code scan error = ${error}`);
+        }
+
+        // Initialize scanner when page loads
+        window.addEventListener('load', function() {
+            const html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader",
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                false
+            );
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        });
+    </script>
+</body>
+</html>
